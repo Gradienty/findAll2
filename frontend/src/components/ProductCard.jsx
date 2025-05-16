@@ -1,3 +1,4 @@
+// frontend/src/components/ProductCard.jsx
 import React from 'react';
 
 export default function ProductCard({ product, onProductClick }) {
@@ -9,10 +10,9 @@ export default function ProductCard({ product, onProductClick }) {
                 border: '1px solid #ddd',
                 borderRadius: '8px',
                 overflow: 'hidden',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
                 cursor: 'pointer',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                transition: 'transform 0.2s ease-in-out',
-                margin: '1rem 0'
+                transition: 'transform 0.2s ease-in-out'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -25,7 +25,7 @@ export default function ProductCard({ product, onProductClick }) {
 
             <div style={{ padding: '1rem' }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{product.name}</h3>
-                <p style={{ color: '#555' }}>{product.description?.slice(0, 80)}...</p>
+                <p style={{ color: '#555', marginBottom: '0.5rem' }}>{product.description?.slice(0, 80)}...</p>
                 <p style={{ fontWeight: 'bold', color: '#222' }}>{product.price.toLocaleString()} ₽</p>
             </div>
         </div>

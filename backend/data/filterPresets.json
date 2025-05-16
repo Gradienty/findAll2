@@ -1,0 +1,18 @@
+[
+  {
+    "category": "Смартфоны",
+    "filters": {
+      "RAM": ["4 GB", "6 GB", "8 GB"],
+      "Screen": ["AMOLED", "IPS", "LCD"],
+      "Battery": ["3000 mAh", "4000 mAh", "5000 mAh"]
+    }
+  },
+  {
+    "category": "Ноутбуки",
+    "filters": {
+      "RAM": ["8 GB", "16 GB", "32 GB"],
+      "GPU": ["Intel", "NVIDIA", "AMD"],
+      "Screen": ["13.3\"", "15.6\"", "17\""]
+    }
+  }
+]

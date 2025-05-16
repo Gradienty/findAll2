@@ -1,40 +1,144 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { getCurrentUser } from '../utils/auth';
 
-export default function ProductDetail({ product, onBack }) {
+const ProductDetail = () => {
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [newReview, setNewReview] = useState({ rating: 5, content: '' });
+
+    const user = getCurrentUser();
+
+    const fetchProduct = async () => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+            setProduct(res.data);
+        } catch (err) {
+            console.error('Ошибка при загрузке товара:', err);
+        }
+    };
+
+    const fetchReviews = async () => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/reviews/${id}`);
+            setReviews(res.data);
+        } catch (err) {
+            console.error('Ошибка при загрузке отзывов:', err);
+        }
+    };
+
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post(
+                'http://localhost:5000/api/reviews',
+                {
+                    product_id: id,
+                    rating: newReview.rating,
+                    content: newReview.content
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            setNewReview({ rating: 5, content: '' });
+            fetchReviews();
+        } catch (err) {
+            console.error('Ошибка при добавлении отзыва:', err);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        try {
+            await axios.delete(`http://localhost:5000/api/reviews/${reviewId}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            fetchReviews();
+        } catch (err) {
+            console.error('Ошибка при удалении отзыва:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchProduct();
+        fetchReviews();
+    }, [id]);
+
+    if (!product) return <div>Загрузка...</div>;
+
     return (
-        <div className="product-detail">
-            <button onClick={onBack}>
-                ← Вернуться к каталогу
-            </button>
+        <div style={{ padding: '20px' }}>
+            <h2>{product.title}</h2>
+            <p>{product.description}</p>
+            <p><strong>Цена:</strong> {product.price} ₽</p>
+            <p><strong>Магазин:</strong> {product.store_name}</p>
+            <img src={product.image_url} alt={product.title} style={{ maxWidth: '300px' }} />
 
-            <h2>{product.name}</h2>
-            <img src={`/assets/images/${product.image}`} alt={product.name} />
+            <hr style={{ margin: '30px 0' }} />
 
-            <p className="price">{product.price.toLocaleString()} ₽</p>
-
-            <section className="specs">
-                <h3>Характеристики:</h3>
-                <ul>
-                    {Object.entries(product.specs || {}).map(([key, value]) => (
-                        <li key={key}>
-                            <strong>{key}</strong>: {value}
+            <h3>Отзывы</h3>
+            {reviews.length === 0 ? (
+                <p>Пока нет отзывов.</p>
+            ) : (
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                    {reviews.map((review) => (
+                        <li key={review.id} style={{ marginBottom: '15px' }}>
+                            <strong>Оценка:</strong> {review.rating} / 5<br />
+                            <strong>Пользователь:</strong> {review.user_email}<br />
+                            <p>{review.content}</p>
+                            {user && user.id === review.user_id && (
+                                <button onClick={() => handleDeleteReview(review.id)} style={{ color: 'red' }}>
+                                    Удалить
+                                </button>
+                            )}
+                            <hr />
                         </li>
                     ))}
                 </ul>
-            </section>
+            )}
 
-            <section className="stores">
-                <h3>Где купить:</h3>
-                <ul>
-                    {product.stores?.map((store, idx) => (
-                        <li key={idx}>
-                            <a href={store.url} target="_blank" rel="noopener noreferrer">
-                                {store.name}: {store.store_price.toLocaleString()} ₽
-                            </a>
-                        </li>
-                    ))}
-                </ul>
-            </section>
+            {user ? (
+                <>
+                    <h4>Оставить отзыв</h4>
+                    <form onSubmit={handleReviewSubmit}>
+                        <label>
+                            Оценка:{' '}
+                            <select
+                                value={newReview.rating}
+                                onChange={(e) => setNewReview({ ...newReview, rating: Number(e.target.value) })}
+                            >
+                                {[5, 4, 3, 2, 1].map((n) => (
+                                    <option key={n} value={n}>{n}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <br />
+                        <label>
+                            Отзыв:
+                            <br />
+                            <textarea
+                                value={newReview.content}
+                                onChange={(e) => setNewReview({ ...newReview, content: e.target.value })}
+                                rows={4}
+                                cols={40}
+                                required
+                            />
+                        </label>
+                        <br />
+                        <button type="submit" style={{ marginTop: '10px' }}>Отправить</button>
+                    </form>
+                </>
+            ) : (
+                <p><em>Войдите, чтобы оставить отзыв.</em></p>
+            )}
         </div>
     );
-}
+};
+
+export default ProductDetail;

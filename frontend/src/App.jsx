@@ -1,35 +1,26 @@
-import React, { useState } from 'react';
-import Header from './components/Header';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Catalog from './components/Catalog';
-import Compare from './components/Compare';
+import ProductDetail from './components/ProductDetail';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
 
-export default function App() {
-    const [activeTab, setActiveTab] = useState("catalog");
-    const [selectedProduct, setSelectedProduct] = useState(null);
-
+function App() {
     return (
-        <div>
-            <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Router>
+            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+                <h1 style={{ textAlign: 'center' }}>НайдемВСЕ</h1>
 
-            <main style={{ padding: '2rem' }}>
-                {activeTab === "catalog" && (
-                    <Catalog
-                        onProductClick={(tab, product) => {
-                            setActiveTab(tab);
-                            if (product) setSelectedProduct(product);
-                        }}
-                    />
-                )}
-
-                {activeTab === "product-detail" && selectedProduct && (
-                    <ProductDetail product={selectedProduct} onBack={() => {
-                        setActiveTab("catalog");
-                        setSelectedProduct(null);
-                    }} />
-                )}
-
-                {activeTab === "compare" && <Compare />}
-            </main>
-        </div>
+                <Routes>
+                    <Route path="/" element={<Catalog />} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                </Routes>
+            </div>
+        </Router>
     );
 }
+
+export default App;

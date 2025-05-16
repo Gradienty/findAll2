@@ -1,60 +1,204 @@
 import React, { useEffect, useState } from 'react';
-import ProductCard from './ProductCard';
+import axios from 'axios';
 
-export default function Catalog({ onProductClick }) {
-    const [products, setProducts] = useState([
-        {
-            id: 1,
-            name: 'iPhone 15 Pro',
-            description: 'Флагманский смартфон Apple...',
-            price: 99990,
-            image: 'iPhone_15_Pro.jpg',
-            rating: 4.8,
-            category_id: 1
-        },
-        {
-            id: 2,
-            name: 'Samsung Galaxy S23 Ultra',
-            description: 'Флагман Android...',
-            price: 119990,
-            image: 'Samsung_Galaxy_S23_Ultra.jpg',
-            rating: 4.7,
-            category_id: 1
-        }
-    ]);
+const categoryOptions = [
+    { id: 1, name: 'Смартфоны' },
+    { id: 2, name: 'Ноутбуки' }
+];
 
-    // Если API доступен — замени моковые данные
+const Catalog = () => {
+    const [products, setProducts] = useState([]);
+    const [categoryId, setCategoryId] = useState(1);
+    const [filters, setFilters] = useState({});
+    const [selectedFilters, setSelectedFilters] = useState({});
+    const [priceMax, setPriceMax] = useState(50000);
+    const [brand, setBrand] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Загрузка всех товаров при загрузке страницы
     useEffect(() => {
-        const fetch = async () => {
-            try {
-                const response = await fetch('http://localhost:5000/api/products');
-                const data = await response.json();
-                setProducts(data);
-            } catch (error) {
-                console.error('API недоступен, используем моковые данные');
-            }
-        };
-
-        fetch();
+        fetchAllProducts();
     }, []);
 
-    return (
-        <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Каталог товаров</h2>
+    const fetchAllProducts = async () => {
+        try {
+            const res = await axios.get('http://localhost:5000/api/products');
+            setProducts(res.data);
+        } catch (err) {
+            console.error('Ошибка при загрузке товаров:', err);
+        }
+    };
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-                gap: '1.5rem'
-            }}>
-                {products.length > 0 ? (
-                    products.map((product) => (
-                        <ProductCard key={product.id} product={product} onProductClick={onProductClick} />
-                    ))
+    const fetchFilters = async (catId) => {
+        try {
+            const res = await axios.get(`http://localhost:5000/api/filters/${catId}`);
+            setFilters(res.data);
+            setSelectedFilters({});
+        } catch (err) {
+            console.error('Ошибка при загрузке фильтров:', err);
+        }
+    };
+
+    const handleCheckboxChange = (key, value) => {
+        setSelectedFilters((prev) => {
+            const values = prev[key] || [];
+            if (values.includes(value)) {
+                return { ...prev, [key]: values.filter((v) => v !== value) };
+            } else {
+                return { ...prev, [key]: [...values, value] };
+            }
+        });
+    };
+
+    const handleFilterSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await axios.post('http://localhost:5000/api/products/filter', {
+                category_id: categoryId,
+                price_max: priceMax,
+                brand,
+                characteristics: selectedFilters
+            });
+            setProducts(res.data);
+            setShowFilters(false); // Закрыть панель после применения
+        } catch (err) {
+            console.error('Ошибка при фильтрации:', err);
+        }
+    };
+
+    const openFilterPanel = () => {
+        setShowFilters(true);
+        fetchFilters(categoryId);
+    };
+
+    return (
+        <div style={{ padding: '20px' }}>
+            <h2>Каталог</h2>
+            <button onClick={openFilterPanel} style={{ marginBottom: '20px' }}>
+                Открыть фильтры
+            </button>
+
+            {/* Панель фильтров */}
+            {showFilters && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        right: 0,
+                        width: '300px',
+                        height: '100%',
+                        backgroundColor: '#f9f9f9',
+                        borderLeft: '1px solid #ccc',
+                        padding: '20px',
+                        overflowY: 'auto',
+                        zIndex: 999
+                    }}
+                >
+                    <h3>Фильтры</h3>
+                    <button onClick={() => setShowFilters(false)} style={{ float: 'right' }}>
+                        ✕
+                    </button>
+
+                    <label>Категория:</label>
+                    <select
+                        value={categoryId}
+                        onChange={(e) => {
+                            const id = Number(e.target.value);
+                            setCategoryId(id);
+                            fetchFilters(id);
+                        }}
+                        style={{ width: '100%', marginBottom: '10px' }}
+                    >
+                        {categoryOptions.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <label>Максимальная цена: {priceMax} ₽</label>
+                    <input
+                        type="range"
+                        min="1000"
+                        max="100000"
+                        step="1000"
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(Number(e.target.value))}
+                        style={{ width: '100%' }}
+                    />
+
+                    <label>Бренд:</label>
+                    <input
+                        type="text"
+                        placeholder="Samsung"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        style={{ width: '100%', marginBottom: '10px' }}
+                    />
+
+                    {Object.entries(filters).map(([key, values]) => (
+                        <div key={key} style={{ marginBottom: '10px' }}>
+                            <strong>{key}:</strong>
+                            {values.map((val) => (
+                                <label key={val} style={{ display: 'block' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedFilters[key]?.includes(val) || false}
+                                        onChange={() => handleCheckboxChange(key, val)}
+                                    />
+                                    {val}
+                                </label>
+                            ))}
+                        </div>
+                    ))}
+
+                    <button onClick={handleFilterSubmit} style={{ marginTop: '10px' }}>
+                        Применить фильтр
+                    </button>
+                </div>
+            )}
+
+            {/* Список товаров */}
+            <div style={{ marginTop: '20px' }}>
+                {products.length === 0 ? (
+                    <p>Нет товаров.</p>
                 ) : (
-                    <p>Нет товаров</p>
+                    <div
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                            gap: '20px'
+                        }}
+                    >
+                        {products.map((product) => (
+                            <div
+                                key={product.id}
+                                style={{
+                                    border: '1px solid #ccc',
+                                    padding: '10px',
+                                    borderRadius: '8px'
+                                }}
+                            >
+                                <img
+                                    src={product.image_url}
+                                    alt={product.title}
+                                    style={{
+                                        width: '100%',
+                                        height: '160px',
+                                        objectFit: 'cover',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                                <h4>{product.title}</h4>
+                                <p>{product.price} ₽</p>
+                                <p style={{ fontSize: '14px', color: '#777' }}>{product.brand}</p>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
     );
-}
+};
+
+export default Catalog;
