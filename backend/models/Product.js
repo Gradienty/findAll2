@@ -2,15 +2,10 @@ const pool = require('../config/db');
 
 // Получить все товары
 async function getAllProducts() {
-    const res = await pool.query(`
-        SELECT p.*, c.name AS category_name, s.name AS store_name
-        FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 LEFT JOIN stores s ON p.store_id = s.id
-        ORDER BY p.created_at DESC
-    `);
+    const res = await pool.query(`SELECT * FROM products`);
     return res.rows;
 }
+
 
 // Получить товар по ID
 async function getProductById(id) {

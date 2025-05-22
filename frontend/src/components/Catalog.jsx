@@ -8,14 +8,16 @@ const categoryOptions = [
 
 const Catalog = () => {
     const [products, setProducts] = useState([]);
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Фильтрация
     const [categoryId, setCategoryId] = useState(1);
     const [filters, setFilters] = useState({});
     const [selectedFilters, setSelectedFilters] = useState({});
     const [priceMax, setPriceMax] = useState(50000);
     const [brand, setBrand] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
 
-    // Загрузка всех товаров при загрузке страницы
+    // Загрузка всех товаров при старте
     useEffect(() => {
         fetchAllProducts();
     }, []);
@@ -60,25 +62,24 @@ const Catalog = () => {
                 characteristics: selectedFilters
             });
             setProducts(res.data);
-            setShowFilters(false); // Закрыть панель после применения
+            setShowFilters(false); // Закрыть фильтры после применения
         } catch (err) {
             console.error('Ошибка при фильтрации:', err);
         }
     };
 
-    const openFilterPanel = () => {
-        setShowFilters(true);
+    const toggleFilterPanel = () => {
+        setShowFilters(!showFilters);
         fetchFilters(categoryId);
     };
 
     return (
         <div style={{ padding: '20px' }}>
-            <h2>Каталог</h2>
-            <button onClick={openFilterPanel} style={{ marginBottom: '20px' }}>
-                Открыть фильтры
+            <h2 style={{ marginBottom: '10px' }}>Каталог</h2>
+            <button onClick={toggleFilterPanel} style={{ marginBottom: '20px' }}>
+                {showFilters ? 'Скрыть фильтры' : 'Открыть фильтры'}
             </button>
 
-            {/* Панель фильтров */}
             {showFilters && (
                 <div
                     style={{
@@ -87,17 +88,14 @@ const Catalog = () => {
                         right: 0,
                         width: '300px',
                         height: '100%',
-                        backgroundColor: '#f9f9f9',
+                        backgroundColor: '#f4f4f4',
                         borderLeft: '1px solid #ccc',
                         padding: '20px',
-                        overflowY: 'auto',
                         zIndex: 999
                     }}
                 >
                     <h3>Фильтры</h3>
-                    <button onClick={() => setShowFilters(false)} style={{ float: 'right' }}>
-                        ✕
-                    </button>
+                    <button onClick={() => setShowFilters(false)} style={{ float: 'right' }}>✕</button>
 
                     <label>Категория:</label>
                     <select
@@ -130,7 +128,7 @@ const Catalog = () => {
                     <label>Бренд:</label>
                     <input
                         type="text"
-                        placeholder="Samsung"
+                        placeholder="например Samsung"
                         value={brand}
                         onChange={(e) => setBrand(e.target.value)}
                         style={{ width: '100%', marginBottom: '10px' }}
@@ -158,7 +156,6 @@ const Catalog = () => {
                 </div>
             )}
 
-            {/* Список товаров */}
             <div style={{ marginTop: '20px' }}>
                 {products.length === 0 ? (
                     <p>Нет товаров.</p>
