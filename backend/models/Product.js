@@ -6,36 +6,31 @@ async function getAllProducts() {
     return res.rows;
 }
 
-
 // Получить товар по ID
 async function getProductById(id) {
-    const res = await pool.query(`
-        SELECT p.*, c.name AS category_name, s.name AS store_name
-        FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 LEFT JOIN stores s ON p.store_id = s.id
-        WHERE p.id = $1
-    `, [id]);
+    const res = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
     return res.rows[0];
 }
 
 // Добавить товар
-async function createProduct({
-                                 title,
-                                 description,
-                                 price,
-                                 brand,
-                                 image_url,
-                                 availability,
-                                 characteristics,
-                                 category_id,
-                                 store_id
-                             }) {
+async function createProduct(data) {
+    const {
+        title,
+        description,
+        price,
+        brand,
+        image_url,
+        availability,
+        characteristics,
+        category_id,
+        store_id
+    } = data;
+
     const res = await pool.query(
         `INSERT INTO products
-         (title, description, price, brand, image_url, availability, characteristics, category_id, store_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-             RETURNING *`,
+    (title, description, price, brand, image_url, availability, characteristics, category_id, store_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *`,
         [
             title,
             description,
@@ -72,59 +67,52 @@ async function deleteProduct(id) {
 // Фильтрация товаров
 async function filterProducts(filters) {
     const { category_id, price_max, brand, characteristics } = filters;
-    let query = `
-        SELECT p.*, c.name AS category_name, s.name AS store_name
-        FROM products p
-                 LEFT JOIN categories c ON p.category_id = c.id
-                 LEFT JOIN stores s ON p.store_id = s.id
-        WHERE 1=1
-    `;
-    const values = [];
-    let index = 1;
 
-    // Фильтр по категории
+    let query = `SELECT * FROM products WHERE 1=1`;
+    const values = [];
+    let i = 1;
+
     if (category_id) {
-        query += ` AND p.category_id = $${index++}`;
+        query += ` AND category_id = $${i++}`;
         values.push(category_id);
     }
 
-    // Фильтр по цене
-    if (price_max) {
-        query += ` AND p.price <= $${index++}`;
+    if (price_max && price_max > 0) {
+        query += ` AND price <= $${i++}`;
         values.push(price_max);
     }
 
-    // Фильтр по бренду
-    if (brand) {
-        query += ` AND p.brand ILIKE $${index++}`;
+    if (brand && brand.trim() !== '') {
+        query += ` AND brand ILIKE $${i++}`;
         values.push(`%${brand}%`);
     }
 
-    // Фильтр по характеристикам (включая массивы значений)
     if (characteristics && typeof characteristics === 'object') {
-        for (const [key, value] of Object.entries(characteristics)) {
-            if (Array.isArray(value)) {
-                if (value.length === 0) continue;
-
-                const clauses = [];
-                for (const v of value) {
-                    clauses.push(`p.characteristics ->> $${index++} ILIKE $${index++}`);
-                    values.push(key, `%${v}%`);
+        for (const [key, val] of Object.entries(characteristics)) {
+            if (Array.isArray(val) && val.length > 0) {
+                const orClauses = [];
+                for (const v of val) {
+                    if (typeof v === 'string' && v.trim() !== '') {
+                        orClauses.push(`characteristics ->> $${i++} ILIKE $${i++}`);
+                        values.push(key, `%${v}%`);
+                    }
                 }
-                query += ` AND (${clauses.join(' OR ')})`;
-            } else {
-                query += ` AND p.characteristics ->> $${index++} ILIKE $${index++}`;
-                values.push(key, `%${value}%`);
+                if (orClauses.length > 0) {
+                    query += ` AND (${orClauses.join(' OR ')})`;
+                }
+            } else if (typeof val === 'string' && val.trim() !== '') {
+                query += ` AND characteristics ->> $${i++} ILIKE $${i++}`;
+                values.push(key, `%${val}%`);
             }
         }
     }
 
-    // Отладка — покажи SQL и параметры
-    console.log('SQL:', query);
-    console.log('VALUES:', values);
+    console.log('\n🔍 SQL FILTER QUERY:');
+    console.log(query);
+    console.log('🔢 VALUES:', values);
 
-    const res = await pool.query(query, values);
-    return res.rows;
+    const result = await pool.query(query, values);
+    return result.rows;
 }
 
 module.exports = {

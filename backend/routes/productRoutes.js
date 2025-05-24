@@ -1,72 +1,65 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/Product');
+const pool = require('../config/db');
 
 // Получить все товары
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.getAllProducts();
-        res.json(products);
+        const result = await pool.query('SELECT * FROM products');
+        res.json(result.rows);
     } catch (err) {
-        console.error('Ошибка при получении всех товаров:', err);
+        console.error('Ошибка при получении товаров:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
-// Получить товар по ID
+// 🔍 Получить один товар по ID
 router.get('/:id', async (req, res) => {
     try {
-        const product = await Product.getProductById(req.params.id);
-        if (!product) {
+        const { id } = req.params;
+        const result = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
+
+        if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Товар не найден' });
         }
+
+        const product = result.rows[0];
+
+        // Преобразуем JSON строку в объект
+        if (typeof product.characteristics === 'string') {
+            product.characteristics = JSON.parse(product.characteristics);
+        }
+
         res.json(product);
     } catch (err) {
         console.error('Ошибка при получении товара:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+// Получить несколько товаров по ID
+router.post('/by-ids', async (req, res) => {
+    const { ids } = req.body;
 
-// Добавить товар
-router.post('/', async (req, res) => {
-    try {
-        const product = await Product.createProduct(req.body);
-        res.status(201).json(product);
-    } catch (err) {
-        console.error('Ошибка при создании товара:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
+    if (!Array.isArray(ids) || ids.length !== 2) {
+        return res.status(400).json({ error: 'Передай два ID в массиве' });
     }
-});
 
-// Обновить товар по ID
-router.put('/:id', async (req, res) => {
     try {
-        const updated = await Product.updateProduct(req.params.id, req.body);
-        res.json(updated);
-    } catch (err) {
-        console.error('Ошибка при обновлении товара:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
+        const result = await pool.query(
+            `SELECT * FROM products WHERE id = ANY($1::int[])`,
+            [ids]
+        );
 
-// Удалить товар по ID
-router.delete('/:id', async (req, res) => {
-    try {
-        await Product.deleteProduct(req.params.id);
-        res.status(204).end();
-    } catch (err) {
-        console.error('Ошибка при удалении товара:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
+        const products = result.rows.map(p => ({
+            ...p,
+            characteristics: typeof p.characteristics === 'string'
+                ? JSON.parse(p.characteristics)
+                : p.characteristics
+        }));
 
-// Фильтрация товаров
-router.post('/filter', async (req, res) => {
-    try {
-        const filtered = await Product.filterProducts(req.body);
-        res.json(filtered);
+        res.json(products);
     } catch (err) {
-        console.error('Ошибка при фильтрации товаров:', err);
+        console.error('Ошибка при получении сравнения:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });

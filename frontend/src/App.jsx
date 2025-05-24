@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import ComparePage from './pages/ComparePage';
 import Catalog from './components/Catalog';
 import ProductDetail from './components/ProductDetail';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import ProductPage from "./pages/ProductPage.jsx";
 
 function App() {
     return (
@@ -13,8 +14,9 @@ function App() {
                 <h1 style={{ textAlign: 'center' }}>НайдемВСЕ</h1>
 
                 <Routes>
+                    <Route path="/compare" element={<ComparePage />} />
+                    <Route path="/product/:id" element={<ProductPage />} />
                     <Route path="/" element={<Catalog />} />
-                    <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                 </Routes>
