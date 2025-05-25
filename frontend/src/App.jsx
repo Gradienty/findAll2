@@ -10,6 +10,7 @@ import FavoritesPage from './pages/FavoritesPage';
 import Navbar from './components/Navbar';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
                 <h1 style={{ textAlign: 'center' }}>НайдемВСЕ</h1>
                 <Navbar />
                 <Routes>
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/compare" element={<ComparePage />} />
                     <Route path="/product/:id" element={<ProductPage />} />

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCompare } from '../context/CompareContext';
-import { useFavorites } from '../context/FavoriteContext.jsx';
+import { useFavorites } from '../context/FavoriteContext';
 
 const categoryOptions = [
     { id: 1, name: 'Смартфоны' },
@@ -83,7 +83,6 @@ const Catalog = () => {
 
     return (
         <div style={{ display: 'flex', padding: '20px' }}>
-            {/* Боковая панель */}
             <form onSubmit={handleSubmit} style={{ width: '250px', marginRight: '30px' }}>
                 <h3>Фильтры</h3>
                 <label>Категория:</label><br />
@@ -134,7 +133,6 @@ const Catalog = () => {
                 <button type="submit">Показать</button>
             </form>
 
-            {/* Каталог */}
             <div style={{ flex: 1 }}>
                 <h3>Результаты</h3>
                 {products.length === 0 ? (

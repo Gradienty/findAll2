@@ -1,46 +1,42 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { saveToken } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
+import { login } from '../api/auth';
+import { saveToken } from '../utils/auth';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/login', {
-                email,
-                password
-            });
+            const res = await login(email, password);
             saveToken(res.data.token);
-            navigate('/');
+            window.location.reload(); // 🔁 перезагружаем страницу
         } catch (err) {
-            alert('Ошибка входа');
-            console.error(err);
+            alert('Ошибка входа. Проверьте данные.');
         }
     };
 
     return (
-        <div style={{ padding: '20px' }}>
+        <div style={{ maxWidth: '400px', margin: '0 auto' }}>
             <h2>Вход</h2>
-            <form onSubmit={handleLogin}>
+            <form onSubmit={handleSubmit}>
                 <input
                     type="email"
-                    placeholder="E-mail"
+                    placeholder="Email"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
                     required
-                /><br /><br />
+                    onChange={(e) => setEmail(e.target.value)}
+                /><br />
                 <input
                     type="password"
                     placeholder="Пароль"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
                     required
-                /><br /><br />
+                    onChange={(e) => setPassword(e.target.value)}
+                /><br />
                 <button type="submit">Войти</button>
             </form>
         </div>
