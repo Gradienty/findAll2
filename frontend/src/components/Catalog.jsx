@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCompare } from '../context/CompareContext';
+import { useFavorites } from '../context/FavoriteContext.jsx';
 
 const categoryOptions = [
     { id: 1, name: 'Смартфоны' },
@@ -20,6 +21,7 @@ const Catalog = () => {
     const [priceMax, setPriceMax] = useState(100000);
     const [brand, setBrand] = useState('');
     const { compareIds, toggleProduct } = useCompare();
+    const { favorites, toggleFavorite } = useFavorites();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -147,8 +149,11 @@ const Catalog = () => {
                                     <p>{product.price} ₽</p>
                                     <p><small>{product.brand}</small></p>
                                 </Link>
-                                <button onClick={() => toggleProduct(product.id)} style={{ marginTop: '10px' }}>
+                                <button onClick={() => toggleProduct(product.id)} style={{ marginTop: '10px', marginRight: '5px' }}>
                                     {compareIds.includes(product.id) ? 'Убрать из сравнения' : 'Сравнить'}
+                                </button>
+                                <button onClick={() => toggleFavorite(product.id)}>
+                                    {favorites.includes(product.id) ? '💔 Удалить' : '💖 В избранное'}
                                 </button>
                             </div>
                         ))}

@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const favoriteRoutes = require('./routes/favoriteRoutes');
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ pool.query('SELECT 1')
 app.get('/ping', (req, res) => res.send('pong'));
 
 // Подключение роутов
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/stores', require('./routes/storeRoutes'));

@@ -1,15 +1,22 @@
 import { jwtDecode } from 'jwt-decode';
 
-export function getCurrentUser() {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
+export function getToken() {
+    return localStorage.getItem('token');
+}
 
+export function saveToken(token) {
+    localStorage.setItem('token', token);
+}
+
+export function logout() {
+    localStorage.removeItem('token');
+}
+
+export function getCurrentUser() {
+    const token = getToken();
+    if (!token) return null;
     try {
-        const decoded = jwtDecode(token);
-        return {
-            id: decoded.userId,
-            role: decoded.role
-        };
+        return jwtDecode(token);
     } catch {
         return null;
     }
