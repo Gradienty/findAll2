@@ -11,44 +11,67 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        if (userCheck.rows.length > 0) {
+        const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userExists.rows.length > 0) {
             return res.status(400).json({ error: 'Пользователь уже существует' });
         }
 
         const hash = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            'INSERT INTO users (email, password_hash, is_verified) VALUES ($1, $2, $3) RETURNING id, email',
+        await pool.query(
+            'INSERT INTO users (email, password_hash, is_verified) VALUES ($1, $2, $3)',
             [email, hash, false]
         );
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
 
         await pool.query(
             'INSERT INTO email_verification (email, code, expires_at) VALUES ($1, $2, $3)',
-            [email, verificationCode, expiresAt]
+            [email, code, expires]
         );
 
         const transporter = nodemailer.createTransport({
-            service: 'Gmail',
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
+                pass: process.env.EMAIL_PASS
+            }
         });
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Код подтверждения',
-            text: `Ваш код подтверждения: ${verificationCode}`
+            text: `Ваш код подтверждения: ${code}`
         });
 
-        res.json({ message: 'Код отправлен на email' });
+        res.json({ message: 'Письмо отправлено на почту' });
+    } catch (err) {
+        console.error('Ошибка регистрации:', err);
+        res.status(500).json({ error: 'Ошибка регистрации' });
+    }
+});
+
+// Подтверждение email
+router.post('/verify-email', async (req, res) => {
+    const { email, code } = req.body;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM email_verification WHERE email = $1 AND code = $2 AND expires_at > NOW()',
+            [email, code]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Неверный или просроченный код' });
+        }
+
+        await pool.query('UPDATE users SET is_verified = true WHERE email = $1', [email]);
+        await pool.query('DELETE FROM email_verification WHERE email = $1', [email]);
+
+        res.json({ message: 'Email подтвержден' });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Ошибка регистрации' });
+        res.status(500).json({ error: 'Ошибка подтверждения email' });
     }
 });
 
@@ -64,40 +87,19 @@ router.post('/login', async (req, res) => {
         if (!valid) return res.status(401).json({ error: 'Неверный пароль' });
 
         const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
         res.json({ token, user: { id: user.id, email: user.email } });
     } catch (err) {
-        console.error(err);
+        console.error('Ошибка входа:', err);
         res.status(500).json({ error: 'Ошибка входа' });
     }
 });
 
-// Подтверждение email
-router.post('/verify-email', async (req, res) => {
-    const { email, code } = req.body;
-    try {
-        const result = await pool.query(
-            'SELECT * FROM email_verification WHERE email = $1 AND code = $2 AND expires_at > NOW()',
-            [email, code]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(400).json({ error: 'Неверный или истекший код' });
-        }
-
-        await pool.query('UPDATE users SET is_verified = true WHERE email = $1', [email]);
-        await pool.query('DELETE FROM email_verification WHERE email = $1', [email]);
-
-        res.json({ message: 'Email подтвержден' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Ошибка подтверждения email' });
-    }
-});
-
-// 🔥 Получение текущего пользователя
+// Получение профиля
 router.get('/me', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
+
     if (!token) return res.status(401).json({ error: 'Нет токена' });
 
     try {
@@ -106,18 +108,19 @@ router.get('/me', async (req, res) => {
             'SELECT id, email, created_at, is_verified FROM users WHERE id = $1',
             [decoded.id]
         );
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Пользователь не найден' });
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
 
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(403).json({ error: 'Неверный токен' });
+        res.status(403).json({ error: 'Недопустимый токен' });
     }
 });
 
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-
+// Смена пароля
 router.post('/change-password', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -126,7 +129,7 @@ router.post('/change-password', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'Нет токена' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey');
+        const decoded = jwt.verify(token, JWT_SECRET);
         const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
         const user = result.rows[0];
 
@@ -138,10 +141,9 @@ router.post('/change-password', async (req, res) => {
 
         res.json({ message: 'Пароль успешно обновлён' });
     } catch (err) {
-        console.error(err);
+        console.error('Ошибка смены пароля:', err);
         res.status(500).json({ error: 'Ошибка смены пароля' });
     }
 });
-
 
 module.exports = router;
