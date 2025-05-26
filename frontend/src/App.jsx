@@ -11,7 +11,7 @@ import Navbar from './components/Navbar';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
-
+import EmailVerification from "./pages/EmailVerification.jsx";
 
 function App() {
     return (
@@ -20,6 +20,8 @@ function App() {
                 <h1 style={{ textAlign: 'center' }}>НайдемВСЕ</h1>
                 <Navbar />
                 <Routes>
+                    <Route path="/verify" element={<EmailVerification />} />
+
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/compare" element={<ComparePage />} />

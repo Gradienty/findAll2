@@ -120,30 +120,68 @@ router.get('/me', async (req, res) => {
     }
 });
 
-// Смена пароля
-router.post('/change-password', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const { currentPassword, newPassword } = req.body;
-
-    if (!token) return res.status(401).json({ error: 'Нет токена' });
-
+// Подтверждение email
+router.post('/verify-email', async (req, res) => {
+    const { email, code } = req.body;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
-        const user = result.rows[0];
+        const result = await pool.query(
+            'SELECT * FROM email_verification WHERE email = $1 AND code = $2 AND expires_at > NOW()',
+            [email, code]
+        );
 
-        const valid = await bcrypt.compare(currentPassword, user.password_hash);
-        if (!valid) return res.status(400).json({ error: 'Неверный текущий пароль' });
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Неверный или просроченный код' });
+        }
 
-        const hash = await bcrypt.hash(newPassword, 10);
-        await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
+        await pool.query('UPDATE users SET is_verified = true WHERE email = $1', [email]);
+        await pool.query('DELETE FROM email_verification WHERE email = $1', [email]);
 
-        res.json({ message: 'Пароль успешно обновлён' });
+        res.json({ message: 'Email подтверждён' });
     } catch (err) {
-        console.error('Ошибка смены пароля:', err);
-        res.status(500).json({ error: 'Ошибка смены пароля' });
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка подтверждения email' });
     }
 });
+
+// Повторная отправка кода
+router.post('/resend-code', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+        await pool.query('DELETE FROM email_verification WHERE email = $1', [email]);
+        await pool.query(
+            'INSERT INTO email_verification (email, code, expires_at) VALUES ($1, $2, $3)',
+            [email, code, expires]
+        );
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Код подтверждения (повторно)',
+            text: `Ваш новый код подтверждения: ${code}`
+        });
+
+        res.json({ message: 'Новый код отправлен' });
+    } catch (err) {
+        console.error('Ошибка при повторной отправке кода:', err);
+        res.status(500).json({ error: 'Ошибка повторной отправки кода' });
+    }
+});
+
 
 module.exports = router;
