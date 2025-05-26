@@ -33,7 +33,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const filterRoutes = require('./routes/filterRoutes');
 
-app.use('/api/auth', authRoutes);             // 🔥 только один раз
+app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/reviews', reviewRoutes);
@@ -42,6 +42,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/filters', filterRoutes);
+
+
 
 app.listen(PORT, () => {
     console.log(`🚀 Сервер работает на http://localhost:${PORT}`);
