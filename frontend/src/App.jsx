@@ -4,7 +4,6 @@ import ComparePage from './pages/ComparePage';
 import Catalog from './components/Catalog';
 import ProductDetail from './components/ProductDetail';
 import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
 import ProductPage from "./pages/ProductPage.jsx";
 import FavoritesPage from './pages/FavoritesPage';
 import Navbar from './components/Navbar';
@@ -28,7 +27,6 @@ function App() {
                     <Route path="/product/:id" element={<ProductPage />} />
                     <Route path="/" element={<Catalog />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/login" element={<LoginPage />} />
                 </Routes>

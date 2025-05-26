@@ -52,28 +52,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Подтверждение email
-router.post('/verify-email', async (req, res) => {
-    const { email, code } = req.body;
-    try {
-        const result = await pool.query(
-            'SELECT * FROM email_verification WHERE email = $1 AND code = $2 AND expires_at > NOW()',
-            [email, code]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(400).json({ error: 'Неверный или просроченный код' });
-        }
-
-        await pool.query('UPDATE users SET is_verified = true WHERE email = $1', [email]);
-        await pool.query('DELETE FROM email_verification WHERE email = $1', [email]);
-
-        res.json({ message: 'Email подтвержден' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Ошибка подтверждения email' });
-    }
-});
 
 // Вход
 router.post('/login', async (req, res) => {
@@ -162,7 +140,9 @@ router.post('/resend-code', async (req, res) => {
         );
 
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.yandex.ru',
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
