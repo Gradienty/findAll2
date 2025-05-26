@@ -6,12 +6,10 @@ const authRoutes = require('./routes/authRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
 
 dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 5000;
-
 app.use(cors());
 app.use(express.json());
+const PORT = process.env.PORT || 5000;
 
 // Проверка подключения к БД
 pool.query('SELECT 1')
@@ -35,6 +33,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/requests', require('./routes/requestRoutes'));
 app.use('/api/filters', require('./routes/filterRoutes'));
+
 
 
 app.listen(PORT, () => {

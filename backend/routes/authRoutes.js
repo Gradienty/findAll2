@@ -41,11 +41,11 @@ router.post('/register', async (req, res) => {
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'Код подтверждения регистрации',
-            text: `Ваш код подтверждения: ${verificationCode}`,
+            subject: 'Код подтверждения',
+            text: `Ваш код подтверждения: ${verificationCode}`
         });
 
-        res.json({ message: 'Код подтверждения отправлен на email' });
+        res.json({ message: 'Код отправлен на email' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Ошибка регистрации' });
@@ -98,7 +98,7 @@ router.post('/verify-email', async (req, res) => {
 router.get('/me', async (req, res) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Токен не предоставлен' });
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -106,14 +106,42 @@ router.get('/me', async (req, res) => {
             'SELECT id, email, created_at, is_verified FROM users WHERE id = $1',
             [decoded.id]
         );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Пользователь не найден' });
-        }
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Пользователь не найден' });
+
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(403).json({ error: 'Недопустимый токен' });
+        res.status(403).json({ error: 'Неверный токен' });
     }
 });
+
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+router.post('/change-password', async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    const { currentPassword, newPassword } = req.body;
+
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey');
+        const result = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+        const user = result.rows[0];
+
+        const valid = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!valid) return res.status(400).json({ error: 'Неверный текущий пароль' });
+
+        const hash = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
+
+        res.json({ message: 'Пароль успешно обновлён' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка смены пароля' });
+    }
+});
+
 
 module.exports = router;
