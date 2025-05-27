@@ -4,10 +4,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const nodemailer = require('nodemailer');
+const authenticate = require('../middleware/authMiddleware');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-// Регистрация
+// Регистрация (оставим временно как есть)
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -22,36 +23,12 @@ router.post('/register', async (req, res) => {
             [email, hash, false]
         );
 
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expires = new Date(Date.now() + 10 * 60 * 1000);
-
-        await pool.query(
-            'INSERT INTO email_verification (email, code, expires_at) VALUES ($1, $2, $3)',
-            [email, code, expires]
-        );
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Код подтверждения',
-            text: `Ваш код подтверждения: ${code}`
-        });
-
-        res.json({ message: 'Письмо отправлено на почту' });
+        res.json({ message: 'Пользователь зарегистрирован' });
     } catch (err) {
         console.error('Ошибка регистрации:', err);
         res.status(500).json({ error: 'Ошибка регистрации' });
     }
 });
-
 
 // Вход
 router.post('/login', async (req, res) => {
@@ -73,18 +50,14 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Получение профиля
-router.get('/me', async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+// ✅ Профиль авторизованного пользователя
 
-    if (!token) return res.status(401).json({ error: 'Нет токена' });
 
+router.get('/me', authenticate, async (req, res) => {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
         const result = await pool.query(
             'SELECT id, email, created_at, is_verified FROM users WHERE id = $1',
-            [decoded.id]
+            [req.user.id] // ✅ тут точно req.user.id
         );
 
         if (result.rows.length === 0) {
@@ -93,8 +66,8 @@ router.get('/me', async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(403).json({ error: 'Недопустимый токен' });
+        console.error('Ошибка получения профиля:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 

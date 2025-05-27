@@ -1,18 +1,19 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-const authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.sendStatus(401);
+module.exports = function (req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-    const token = authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
+        console.log('🔑 decoded JWT:', decoded); // должен быть { id: ... }
+        req.user = decoded; // ⬅️ вот тут просто id
         next();
     } catch (err) {
-        return res.sendStatus(403);
+        console.error('Ошибка в middleware аутентификации:', err);
+        res.status(403).json({ error: 'Недопустимый токен' });
     }
 };
-
-module.exports = authenticate;
