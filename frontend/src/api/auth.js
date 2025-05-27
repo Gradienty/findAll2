@@ -15,10 +15,6 @@ export const getUserProfile = (token) =>
         }
     });
 
-export const verifyEmail = (email, code) =>
-    axios.post('http://localhost:5000/api/auth/verify-email', { email, code });
 
-export const resendCode = (email) =>
-    axios.post('http://localhost:5000/api/auth/resend-code', { email });
 
 
