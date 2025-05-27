@@ -8,59 +8,55 @@ router.get('/', async (req, res) => {
         const result = await pool.query('SELECT * FROM products');
         res.json(result.rows);
     } catch (err) {
-        console.error('Ошибка при получении товаров:', err);
+        console.error('Ошибка при загрузке товаров:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
-// 🔍 Получить один товар по ID
+// Получить товар по ID
 router.get('/:id', async (req, res) => {
+    const productId = req.params.id;
     try {
-        const { id } = req.params;
-        const result = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
-
+        const result = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Товар не найден' });
         }
-
-        const product = result.rows[0];
-
-        // Преобразуем JSON строку в объект
-        if (typeof product.characteristics === 'string') {
-            product.characteristics = JSON.parse(product.characteristics);
-        }
-
-        res.json(product);
+        res.json(result.rows[0]);
     } catch (err) {
         console.error('Ошибка при получении товара:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
-// Получить несколько товаров по ID
-router.post('/by-ids', async (req, res) => {
-    const { ids } = req.body;
 
-    if (!Array.isArray(ids) || ids.length !== 2) {
-        return res.status(400).json({ error: 'Передай два ID в массиве' });
-    }
+// 🔥 Фильтрация
+router.post('/filter', async (req, res) => {
+    const { category_id, price_max, brand, characteristics } = req.body;
 
     try {
-        const result = await pool.query(
-            `SELECT * FROM products WHERE id = ANY($1::int[])`,
-            [ids]
-        );
+        let query = 'SELECT * FROM products WHERE category_id = $1 AND price <= $2';
+        let values = [category_id, price_max];
+        let index = 3;
 
-        const products = result.rows.map(p => ({
-            ...p,
-            characteristics: typeof p.characteristics === 'string'
-                ? JSON.parse(p.characteristics)
-                : p.characteristics
-        }));
+        if (brand) {
+            query += ` AND brand ILIKE $${index}`;
+            values.push(`%${brand}%`);
+            index++;
+        }
 
-        res.json(products);
+        for (const [key, valArray] of Object.entries(characteristics || {})) {
+            if (valArray.length > 0) {
+                query += ` AND characteristics->>$${index} = ANY($${index + 1})`;
+                values.push(key);
+                values.push(valArray);
+                index += 2;
+            }
+        }
+
+        const result = await pool.query(query, values);
+        res.json(result.rows);
     } catch (err) {
-        console.error('Ошибка при получении сравнения:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
+        console.error('Ошибка при фильтрации:', err);
+        res.status(500).json({ error: 'Ошибка фильтрации' });
     }
 });
 
