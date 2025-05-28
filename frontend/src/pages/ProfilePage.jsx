@@ -26,7 +26,7 @@
                     setUser(profileRes.data);
 
                     // Избранное
-                    const favRes = await axios.get(`http://localhost:5000/api/favorites/${current.id}`, {
+                    const favRes = await axios.get('http://localhost:5000/api/favorites/me', {
                         headers: { Authorization: `Bearer ${token}` }
                     });
 

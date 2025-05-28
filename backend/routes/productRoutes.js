@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
+// 🔍 Подсказки по названию — СТАВИМ ВЫШЕ
+router.get('/suggestions', async (req, res) => {
+    const query = req.query.query;
+
+    if (!query) {
+        return res.status(400).json({ error: 'Нет параметра query' });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT id, title FROM products WHERE title ILIKE $1 LIMIT 5',
+            [`%${query}%`]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Ошибка при получении подсказок:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
 // Получить все товары
 router.get('/', async (req, res) => {
     try {
@@ -28,18 +48,18 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// 🔥 Фильтрация
+// 🔍 ФИЛЬТРАЦИЯ товаров
 router.post('/filter', async (req, res) => {
-    const { category_id, price_max, brand, characteristics } = req.body;
+    const { category_id, price_max, search, characteristics } = req.body;
 
     try {
-        let query = 'SELECT * FROM products WHERE category_id = $1 AND price <= $2';
+        let query = `SELECT * FROM products WHERE category_id = $1 AND price <= $2`;
         let values = [category_id, price_max];
         let index = 3;
 
-        if (brand) {
-            query += ` AND brand ILIKE $${index}`;
-            values.push(`%${brand}%`);
+        if (search && search.trim() !== '') {
+            query += ` AND title ILIKE $${index}`;
+            values.push(`%${search}%`);
             index++;
         }
 

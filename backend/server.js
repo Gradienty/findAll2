@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ pool.query('SELECT 1')
 app.get('/ping', (req, res) => res.send('pong'));
 
 // Роуты
+app.use('/api/auth', authRoutes);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));

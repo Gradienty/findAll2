@@ -9,8 +9,8 @@ module.exports = function (req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        console.log('🔑 decoded JWT:', decoded); // должен быть { id: ... }
-        req.user = decoded; // ⬅️ вот тут просто id
+        console.log('🔑 decoded JWT:', decoded);
+        req.user.id = decoded;
         next();
     } catch (err) {
         console.error('Ошибка в middleware аутентификации:', err);

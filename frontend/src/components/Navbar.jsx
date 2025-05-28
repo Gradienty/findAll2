@@ -15,7 +15,7 @@ const Navbar = () => {
         const confirmed = window.confirm('Вы действительно хотите выйти из аккаунта?');
         if (confirmed) {
             logout();
-            window.location.reload(); // полная перезагрузка
+            window.location.reload();
         }
     };
 
@@ -28,22 +28,17 @@ const Navbar = () => {
             color: 'white',
             padding: '15px 30px'
         }}>
-            <div>
-                {location.pathname !== '/' && (
-                    <Link to="/" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
-                        ← На главную
-                    </Link>
-                )}
-                <Link to="/profile" style={{ color: 'white', marginRight: '20px' }}>
-                    Профиль
-                </Link>
-
-                <Link to="/" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>Каталог</Link>
-                <Link to="/favorites" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Главная</Link>
+                <Link to="/catalog" style={{ color: 'white', textDecoration: 'none' }}>Каталог</Link>
+                <Link to="/favorites" style={{ color: 'white', textDecoration: 'none' }}>
                     Избранное ({favorites.length})
                 </Link>
-                <Link to="/compare" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                <Link to="/compare" style={{ color: 'white', textDecoration: 'none' }}>
                     Сравнение ({compareIds.length})
+                </Link>
+                <Link to="/profile" style={{ color: 'white', textDecoration: 'none' }}>
+                    Профиль
                 </Link>
             </div>
 
@@ -53,11 +48,11 @@ const Navbar = () => {
                         onClick={handleLogout}
                         style={{ cursor: 'pointer', color: 'white', textDecoration: 'underline' }}
                     >
-            Выйти ({user.email})
-          </span>
+                        Выйти ({user.email})
+                    </span>
                 ) : (
                     <>
-                        <Link to="/login" style={{ color: 'white', marginRight: '20px' }}>Вход</Link>
+                        <Link to="/login" style={{ color: 'white', marginRight: '10px' }}>Вход</Link>
                         <Link to="/register" style={{ color: 'white' }}>Регистрация</Link>
                     </>
                 )}

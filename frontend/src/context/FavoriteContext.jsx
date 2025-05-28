@@ -1,42 +1,43 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentUser, getToken } from '../utils/auth';
-import { fetchFavorites, toggleFavorite as toggleFavoriteAPI } from '../api/favorites';
+import { getToken } from '../utils/auth';
+import axios from 'axios';
 
 const FavoriteContext = createContext();
 export const useFavorites = () => useContext(FavoriteContext);
 
 export const FavoriteProvider = ({ children }) => {
     const [favorites, setFavorites] = useState([]);
-    const [user, setUser] = useState(null);
 
+    // Загрузка избранного при загрузке компонента
     useEffect(() => {
-        const u = getCurrentUser();
-        if (u && u.id) {
-            setUser(u);
-        }
+        const token = getToken();
+        if (!token) return;
+
+        axios.get('http://localhost:5000/api/favorites/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => setFavorites(res.data))
+            .catch(err => console.error('Ошибка загрузки избранного:', err));
     }, []);
 
-    useEffect(() => {
-        if (user?.id) {
-            fetchFavorites(user.id)
-                .then(res => setFavorites(res.data))
-                .catch(err => console.error('Ошибка загрузки избранного:', err));
-        }
-    }, [user]);
-
     const toggleFavorite = async (productId) => {
-        const currentUser = getCurrentUser();
-        if (!currentUser) {
+        const token = getToken();
+        if (!token) {
             alert('Войдите в аккаунт, чтобы использовать избранное');
             return;
         }
 
         try {
-            const res = await toggleFavoriteAPI(productId);
-            setFavorites((prev) =>
+            const res = await axios.post('http://localhost:5000/api/favorites', {
+                product_id: productId
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setFavorites(prev =>
                 res.data.status === 'added'
                     ? [...prev, productId]
-                    : prev.filter((id) => id !== productId)
+                    : prev.filter(id => id !== productId)
             );
         } catch (err) {
             console.error('Ошибка при обновлении избранного:', err);

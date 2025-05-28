@@ -6,7 +6,6 @@ const authenticate = require('../middleware/authMiddleware');
 // ✅ Получить избранные товары текущего пользователя (по токену)
 router.get('/me', authenticate, async (req, res) => {
     const userId = req.user.id;
-
     try {
         const result = await pool.query(
             'SELECT product_id FROM favorites WHERE user_id = $1',
@@ -15,8 +14,8 @@ router.get('/me', authenticate, async (req, res) => {
         const productIds = result.rows.map(row => row.product_id);
         res.json(productIds);
     } catch (err) {
-        console.error('Ошибка при получении избранного:', err);
-        res.status(500).json({ error: 'Ошибка при получении избранного' });
+        console.error(err);
+        res.status(500).json({ error: 'Ошибка при загрузке избранного' });
     }
 });
 
