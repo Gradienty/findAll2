@@ -17,9 +17,10 @@ router.get('/suggestions', async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
-        console.error('Ошибка при получении подсказок:', err);
+        console.error('Ошибка при получении подсказок:', err.stack);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
+
 });
 
 // Получить все товары

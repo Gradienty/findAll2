@@ -10,7 +10,7 @@ module.exports = function (req, res, next) {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         console.log('🔑 decoded JWT:', decoded);
-        req.user.id = decoded;
+        req.user = { id: decoded.id }; // 🛠️ ИСПРАВЛЕНО — создаём объект
         next();
     } catch (err) {
         console.error('Ошибка в middleware аутентификации:', err);

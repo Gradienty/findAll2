@@ -1,58 +1,67 @@
-// frontend/src/components/Header.jsx
 import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { getCurrentUser, logout } from '../utils/auth';
+import { useCompare } from '../context/CompareContext';
+import { useFavorites } from '../context/FavoriteContext';
 
-export default function Header({ activeTab, setActiveTab }) {
+const Navbar = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const user = getCurrentUser();
+    const { compareIds } = useCompare();
+    const { favorites } = useFavorites();
+
+    const handleLogout = () => {
+        const confirmed = window.confirm('Вы действительно хотите выйти из аккаунта?');
+        if (confirmed) {
+            logout();
+            window.location.reload();
+        }
+    };
+
     return (
-        <header style={{
-            backgroundColor: '#fff',
-            borderBottom: '1px solid #E5E7EB',
-            padding: '1rem 2rem'
+        <nav style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: '#2c3e50',
+            color: 'white',
+            padding: '15px 30px'
         }}>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
-                <h1
-                    onClick={() => setActiveTab("catalog")}
-                    style={{
-                        fontSize: '1.5rem',
-                        color: '#6366F1',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    НайдемВСЕ
-                </h1>
-
-                <nav style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={() => setActiveTab("catalog")}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: activeTab === "catalog" ? "#6366F1" : "#222",
-                            fontWeight: activeTab === "catalog" ? "bold" : "normal",
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Каталог
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab("compare")}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: activeTab === "compare" ? "#6366F1" : "#222",
-                            fontWeight: activeTab === "compare" ? "bold" : "normal",
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Сравнение
-                    </button>
-                </nav>
+            <div>
+                {location.pathname !== '/' && (
+                    <Link to="/" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                        ← На главную
+                    </Link>
+                )}
+                <Link to="/favorites" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                    Избранное ({favorites.length})
+                </Link>
+                <Link to="/compare" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                    Сравнение ({compareIds.length})
+                </Link>
+                <Link to="/profile" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                    Профиль
+                </Link>
             </div>
-        </header>
+
+            <div>
+                {user ? (
+                    <span
+                        onClick={handleLogout}
+                        style={{ cursor: 'pointer', color: 'white', textDecoration: 'underline' }}
+                    >
+                        Выйти ({user.email})
+                    </span>
+                ) : (
+                    <>
+                        <Link to="/login" style={{ color: 'white', marginRight: '20px' }}>Вход</Link>
+                        <Link to="/register" style={{ color: 'white' }}>Регистрация</Link>
+                    </>
+                )}
+            </div>
+        </nav>
     );
-}
+};
+
+export default Navbar;
