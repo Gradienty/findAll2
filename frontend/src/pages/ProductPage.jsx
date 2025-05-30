@@ -7,7 +7,6 @@ import './ProductPage.css';
 const ProductPage = () => {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
-    const [offers, setOffers] = useState([]);
     const { compareIds, toggleProduct } = useCompare();
 
     useEffect(() => {
@@ -20,17 +19,7 @@ const ProductPage = () => {
             }
         };
 
-        const fetchOffers = async () => {
-            try {
-                const res = await axios.get(`http://localhost:5000/api/stores/by-product/${id}`);
-                setOffers(res.data);
-            } catch (err) {
-                console.error('Ошибка загрузки предложений магазинов:', err);
-            }
-        };
-
         fetchProduct();
-        fetchOffers();
     }, [id]);
 
     if (!product) return <div className="product-page">Загрузка...</div>;
@@ -45,7 +34,7 @@ const ProductPage = () => {
                 <div className="product-info">
                     <h1>{product.title}</h1>
                     <p className="product-brand">{product.brand}</p>
-                    <p className="product-price">{product.price} ₽</p>
+                    <p className="product-price">{product.min_price || product.price} ₽</p>
                     <p className="product-description">{product.description}</p>
 
                     <button onClick={() => toggleProduct(product.id)}>
@@ -66,7 +55,7 @@ const ProductPage = () => {
 
             <div className="product-offers">
                 <h3>Цены в магазинах:</h3>
-                {offers.length === 0 ? (
+                {product.offers && product.offers.length === 0 ? (
                     <p>Нет предложений.</p>
                 ) : (
                     <table>
@@ -78,7 +67,7 @@ const ProductPage = () => {
                         </tr>
                         </thead>
                         <tbody>
-                        {offers.map((offer, index) => (
+                        {product.offers && product.offers.map((offer, index) => (
                             <tr key={index}>
                                 <td>{offer.name}</td>
                                 <td>{offer.store_price} ₽</td>

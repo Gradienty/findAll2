@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
-// 🔍 Подсказки по названию — СТАВИМ ВЫШЕ
+// 🔍 Подсказки по названию
 router.get('/suggestions', async (req, res) => {
     const query = req.query.query;
 
@@ -20,13 +20,27 @@ router.get('/suggestions', async (req, res) => {
         console.error('Ошибка при получении подсказок:', err.stack);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
-
 });
 
-// Получить все товары
+// Получить все товары с минимальной ценой
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM products');
+        const search = req.query.search;
+        let query = `
+            SELECT p.*, MIN(s.store_price) AS min_price
+            FROM products p
+            LEFT JOIN store_offers s ON s.product_id = p.id
+        `;
+        let values = [];
+
+        if (search) {
+            query += ' WHERE p.title ILIKE $1';
+            values.push(`%${search}%`);
+        }
+
+        query += ' GROUP BY p.id ORDER BY p.id';
+
+        const result = await pool.query(query, values);
         res.json(result.rows);
     } catch (err) {
         console.error('Ошибка при загрузке товаров:', err);
@@ -34,15 +48,25 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Получить товар по ID
+// Получить товар по ID с предложениями
 router.get('/:id', async (req, res) => {
     const productId = req.params.id;
     try {
-        const result = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
-        if (result.rows.length === 0) {
+        const productRes = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
+        if (productRes.rows.length === 0) {
             return res.status(404).json({ error: 'Товар не найден' });
         }
-        res.json(result.rows[0]);
+        const product = productRes.rows[0];
+
+        const offersRes = await pool.query(`
+            SELECT s.store_price, s.url, st.name, st.base_url
+            FROM store_offers s
+            JOIN stores st ON st.id = s.store_id
+            WHERE s.product_id = $1
+            ORDER BY s.store_price ASC
+        `, [productId]);
+
+        res.json({ ...product, offers: offersRes.rows });
     } catch (err) {
         console.error('Ошибка при получении товара:', err);
         res.status(500).json({ error: 'Ошибка сервера' });

@@ -30,7 +30,6 @@ const Navbar = () => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Главная</Link>
-                <Link to="/catalog" style={{ color: 'white', textDecoration: 'none' }}>Каталог</Link>
                 <Link to="/favorites" style={{ color: 'white', textDecoration: 'none' }}>
                     Избранное ({favorites.length})
                 </Link>
