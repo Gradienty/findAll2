@@ -2,7 +2,45 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
-// 🔍 Подсказки по названию
+// 🔹 Получить все товары
+router.get('/', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM products');
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Ошибка при загрузке товаров:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// 🔹 Получить товар по ID с предложениями из магазинов
+router.get('/:id', async (req, res) => {
+    const productId = req.params.id;
+    try {
+        const productRes = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
+        if (productRes.rows.length === 0) {
+            return res.status(404).json({ error: 'Товар не найден' });
+        }
+
+        const product = productRes.rows[0];
+
+        const offersRes = await pool.query(
+            `SELECT so.store_price, so.url, s.name AS store_name
+             FROM store_offers so
+             JOIN stores s ON s.id = so.store_id
+             WHERE so.product_id = $1`,
+            [productId]
+        );
+
+        product.offers = offersRes.rows;
+        res.json(product);
+    } catch (err) {
+        console.error('Ошибка при получении товара:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// 🔍 Подсказки по названию товара
 router.get('/suggestions', async (req, res) => {
     const query = req.query.query;
 
@@ -17,83 +55,52 @@ router.get('/suggestions', async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
-        console.error('Ошибка при получении подсказок:', err.stack);
+        console.error('Ошибка при получении подсказок:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
 
-// Получить все товары с минимальной ценой
-router.get('/', async (req, res) => {
-    try {
-        const search = req.query.search;
-        let query = `
-            SELECT p.*, MIN(s.store_price) AS min_price
-            FROM products p
-            LEFT JOIN store_offers s ON s.product_id = p.id
-        `;
-        let values = [];
-
-        if (search) {
-            query += ' WHERE p.title ILIKE $1';
-            values.push(`%${search}%`);
-        }
-
-        query += ' GROUP BY p.id ORDER BY p.id';
-
-        const result = await pool.query(query, values);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Ошибка при загрузке товаров:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
-
-// Получить товар по ID с предложениями
-router.get('/:id', async (req, res) => {
-    const productId = req.params.id;
-    try {
-        const productRes = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
-        if (productRes.rows.length === 0) {
-            return res.status(404).json({ error: 'Товар не найден' });
-        }
-        const product = productRes.rows[0];
-
-        const offersRes = await pool.query(`
-            SELECT s.store_price, s.url, st.name, st.base_url
-            FROM store_offers s
-            JOIN stores st ON st.id = s.store_id
-            WHERE s.product_id = $1
-            ORDER BY s.store_price ASC
-        `, [productId]);
-
-        res.json({ ...product, offers: offersRes.rows });
-    } catch (err) {
-        console.error('Ошибка при получении товара:', err);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
-
-// 🔍 ФИЛЬТРАЦИЯ товаров
+// 🔎 Фильтрация товаров
 router.post('/filter', async (req, res) => {
     const { category_id, price_max, search, characteristics } = req.body;
 
     try {
-        let query = `SELECT * FROM products WHERE category_id = $1 AND price <= $2`;
-        let values = [category_id, price_max];
-        let index = 3;
+        let query = `SELECT * FROM products WHERE 1=1`;
+        const values = [];
+        let i = 1;
 
-        if (search && search.trim() !== '') {
-            query += ` AND title ILIKE $${index}`;
-            values.push(`%${search}%`);
-            index++;
+        if (category_id) {
+            query += ` AND category_id = $${i++}`;
+            values.push(category_id);
         }
 
-        for (const [key, valArray] of Object.entries(characteristics || {})) {
-            if (valArray.length > 0) {
-                query += ` AND characteristics->>$${index} = ANY($${index + 1})`;
-                values.push(key);
-                values.push(valArray);
-                index += 2;
+        if (price_max && price_max > 0) {
+            query += ` AND price <= $${i++}`;
+            values.push(price_max);
+        }
+
+        if (search && search.trim() !== '') {
+            query += ` AND title ILIKE $${i++}`;
+            values.push(`%${search}%`);
+        }
+
+        if (characteristics && typeof characteristics === 'object') {
+            for (const [key, val] of Object.entries(characteristics)) {
+                if (Array.isArray(val) && val.length > 0) {
+                    const orClauses = [];
+                    for (const v of val) {
+                        if (typeof v === 'string' && v.trim() !== '') {
+                            orClauses.push(`characteristics ->> $${i++} ILIKE $${i++}`);
+                            values.push(key, `%${v}%`);
+                        }
+                    }
+                    if (orClauses.length > 0) {
+                        query += ` AND (${orClauses.join(' OR ')})`;
+                    }
+                } else if (typeof val === 'string' && val.trim() !== '') {
+                    query += ` AND characteristics ->> $${i++} ILIKE $${i++}`;
+                    values.push(key, `%${val}%`);
+                }
             }
         }
 
