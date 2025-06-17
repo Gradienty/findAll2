@@ -3,7 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const pool = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
-
+const productRoutes = require('./routes/productRoutes');
 dotenv.config();
 
 const app = express();
@@ -25,6 +25,7 @@ app.get('/ping', (req, res) => res.send('pong'));
 
 // Роуты
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));

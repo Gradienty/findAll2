@@ -10,3 +10,4 @@ export const fetchProductById = (id) =>
 
 export const filterProducts = (filters) =>
     axios.post(`${API_URL}/filter`, filters);
+

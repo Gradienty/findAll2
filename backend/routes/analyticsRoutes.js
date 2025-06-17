@@ -4,45 +4,20 @@ const pool = require('../config/db');
 
 // 🔍 Подсказки по названию
 router.get('/suggestions', async (req, res) => {
-    const searchTerm = req.query.query;
+    const query = req.query.query;
 
-    if (!searchTerm || searchTerm.trim() === '') {
-        return res.status(400).json({ error: 'Параметр query обязателен' });
+    if (!query) {
+        return res.status(400).json({ error: 'Нет параметра query' });
     }
 
     try {
         const result = await pool.query(
             'SELECT id, title FROM products WHERE title ILIKE $1 LIMIT 5',
-            [`%${searchTerm}%`]
+            [`%${query}%`]
         );
         res.json(result.rows);
     } catch (err) {
         console.error('Ошибка при получении подсказок:', err.stack);
-        res.status(500).json({ error: 'Ошибка сервера' });
-    }
-});
-// Получить список товаров по массиву ID
-router.post('/by-ids', async (req, res) => {
-    const { ids } = req.body;
-
-    if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ error: 'Передай массив product IDs' });
-    }
-
-    try {
-        const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
-        const query = `
-            SELECT p.*, 
-                   COALESCE(MIN(s.store_price), p.price) AS min_price
-            FROM products p
-            LEFT JOIN store_offers s ON s.product_id = p.id
-            WHERE p.id IN (${placeholders})
-            GROUP BY p.id
-        `;
-        const result = await pool.query(query, ids);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Ошибка при получении товаров по ID:', err);
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
@@ -52,9 +27,9 @@ router.get('/', async (req, res) => {
     try {
         const search = req.query.search;
         let query = `
-            SELECT p.*, MIN(s.store_price) AS min_price
+            SELECT p.*, COALESCE(MIN(s.store_price), 0) AS min_price
             FROM products p
-            LEFT JOIN store_offers s ON s.product_id = p.id
+                     LEFT JOIN store_offers s ON s.product_id = p.id
         `;
         let values = [];
 
@@ -73,10 +48,12 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Получить товар по ID с предложениями
+// Получить товар по ID с предложениями и инкрементировать просмотры
 router.get('/:id', async (req, res) => {
     const productId = req.params.id;
     try {
+        await pool.query('UPDATE products SET views = COALESCE(views, 0) + 1 WHERE id = $1', [productId]);
+
         const productRes = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
         if (productRes.rows.length === 0) {
             return res.status(404).json({ error: 'Товар не найден' });
@@ -86,7 +63,7 @@ router.get('/:id', async (req, res) => {
         const offersRes = await pool.query(`
             SELECT s.store_price, s.url, st.name, st.base_url
             FROM store_offers s
-            JOIN stores st ON st.id = s.store_id
+                     JOIN stores st ON st.id = s.store_id
             WHERE s.product_id = $1
             ORDER BY s.store_price ASC
         `, [productId]);
@@ -98,7 +75,23 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Фильтрация товаров
+// 📊 Получить товары с наибольшим количеством просмотров
+router.get('/analytics/views', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, title, views
+            FROM products
+            ORDER BY views DESC NULLS LAST
+            LIMIT 10
+        `);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Ошибка при получении аналитики просмотров:', err);
+        res.status(500).json({ error: 'Ошибка аналитики' });
+    }
+});
+
+// 🔍 ФИЛЬТРАЦИЯ товаров
 router.post('/filter', async (req, res) => {
     const { category_id, price_max, search, characteristics } = req.body;
 

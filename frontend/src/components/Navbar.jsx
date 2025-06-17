@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import { useCompare } from '../context/CompareContext';
 import { useFavorites } from '../context/FavoriteContext';
@@ -28,17 +28,11 @@ const Navbar = () => {
             color: 'white',
             padding: '15px 30px'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>Главная</Link>
-                <Link to="/favorites" style={{ color: 'white', textDecoration: 'none' }}>
-                    Избранное ({favorites.length})
-                </Link>
-                <Link to="/compare" style={{ color: 'white', textDecoration: 'none' }}>
-                    Сравнение ({compareIds.length})
-                </Link>
-                <Link to="/profile" style={{ color: 'white', textDecoration: 'none' }}>
-                    Профиль
-                </Link>
+            <div style={{ display: 'flex', gap: '20px' }}>
+                <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>🏠 Главная</Link>
+                <Link to="/favorites" style={{ color: 'white', textDecoration: 'none' }}>❤️ Избранное ({favorites.length})</Link>
+                <Link to="/compare" style={{ color: 'white', textDecoration: 'none' }}>⚖️ Сравнение ({compareIds.length})</Link>
+                <Link to="/analytics" style={{ color: 'white', textDecoration: 'none' }}>📊 Аналитика</Link>
             </div>
 
             <div>
@@ -47,11 +41,11 @@ const Navbar = () => {
                         onClick={handleLogout}
                         style={{ cursor: 'pointer', color: 'white', textDecoration: 'underline' }}
                     >
-                        Выйти ({user.email})
-                    </span>
+            Выйти ({user.email})
+          </span>
                 ) : (
                     <>
-                        <Link to="/login" style={{ color: 'white', marginRight: '10px' }}>Вход</Link>
+                        <Link to="/login" style={{ color: 'white', marginRight: '20px' }}>Вход</Link>
                         <Link to="/register" style={{ color: 'white' }}>Регистрация</Link>
                     </>
                 )}
