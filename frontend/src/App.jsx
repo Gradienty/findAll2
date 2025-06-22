@@ -10,15 +10,14 @@ import Navbar from './components/Navbar';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 function App() {
     return (
         <Router>
-            <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
-                <h1 style={{ textAlign: 'center' }}>НайдемВСЕ</h1>
+            <div style={{ minHeight: '100vh', background: 'linear-gradient(to right, #0f0c29, #302b63, #24243e)', paddingBottom: '30px' }}>
                 <Navbar />
                 <Routes>
-
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/compare" element={<ComparePage />} />
@@ -26,11 +25,13 @@ function App() {
                     <Route path="/" element={<Catalog />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
                 </Routes>
             </div>
         </Router>
     );
 }
+
+
 
 export default App;

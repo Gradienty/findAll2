@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getCurrentUser, logout } from '../utils/auth';
 import { useCompare } from '../context/CompareContext';
 import { useFavorites } from '../context/FavoriteContext';
+import { FaHeart, FaChartBar, FaUser, FaSignOutAlt, FaExchangeAlt } from 'react-icons/fa';
 
 const Navbar = () => {
     const location = useLocation();
@@ -24,34 +25,68 @@ const Navbar = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: '#2c3e50',
+            background: 'rgba(15, 12, 41, 0.9)',
+            padding: '16px 30px',
+            borderRadius: '0 0 16px 16px',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+            marginBottom: '20px',
             color: 'white',
-            padding: '15px 30px'
+            fontFamily: 'Inter, sans-serif',
+            backdropFilter: 'blur(8px)'
         }}>
-            <div style={{ display: 'flex', gap: '20px' }}>
-                <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>🏠 Главная</Link>
-                <Link to="/favorites" style={{ color: 'white', textDecoration: 'none' }}>❤️ Избранное ({favorites.length})</Link>
-                <Link to="/compare" style={{ color: 'white', textDecoration: 'none' }}>⚖️ Сравнение ({compareIds.length})</Link>
-                <Link to="/analytics" style={{ color: 'white', textDecoration: 'none' }}>📊 Аналитика</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                {location.pathname !== '/' && (
+                    <Link to="/" style={linkStyle}>
+                        ⬅ Каталог
+                    </Link>
+                )}
+                <Link to="/favorites" style={linkStyle}>
+                    <FaHeart style={iconStyle} /> Избранное ({favorites.length})
+                </Link>
+                <Link to="/compare" style={linkStyle}>
+                    <FaExchangeAlt style={iconStyle} /> Сравнение ({compareIds.length})
+                </Link>
+                <Link to="/analytics" style={linkStyle}>
+                    <FaChartBar style={iconStyle} /> Аналитика
+                </Link>
             </div>
 
             <div>
                 {user ? (
-                    <span
-                        onClick={handleLogout}
-                        style={{ cursor: 'pointer', color: 'white', textDecoration: 'underline' }}
-                    >
-            Выйти ({user.email})
-          </span>
+                    <>
+                        <Link to="/profile" style={linkStyle}>
+                            <FaUser style={iconStyle} /> Профиль
+                        </Link>
+                        <span
+                            onClick={handleLogout}
+                            style={{ ...linkStyle, cursor: 'pointer' }}
+                        >
+                            <FaSignOutAlt style={iconStyle} /> Выйти ({user.email})
+                        </span>
+                    </>
                 ) : (
                     <>
-                        <Link to="/login" style={{ color: 'white', marginRight: '20px' }}>Вход</Link>
-                        <Link to="/register" style={{ color: 'white' }}>Регистрация</Link>
+                        <Link to="/login" style={linkStyle}>Вход</Link>
+                        <Link to="/register" style={linkStyle}>Регистрация</Link>
                     </>
                 )}
             </div>
         </nav>
     );
+};
+
+const linkStyle = {
+    color: '#a084e8',
+    textDecoration: 'none',
+    fontWeight: '500',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'color 0.3s ease'
+};
+
+const iconStyle = {
+    verticalAlign: 'middle'
 };
 
 export default Navbar;

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCompare } from '../context/CompareContext';
 import { useFavorites } from '../context/FavoriteContext';
+import { FaHeart, FaBalanceScale } from 'react-icons/fa';
 
 const categoryOptions = [
     { id: 1, name: 'Смартфоны' },
@@ -18,6 +19,7 @@ const Catalog = () => {
     const [filters, setFilters] = useState({});
     const [selectedFilters, setSelectedFilters] = useState({});
     const [products, setProducts] = useState([]);
+    const [priceMin, setPriceMin] = useState(0);
     const [priceMax, setPriceMax] = useState(100000);
     const [search, setSearch] = useState('');
     const [suggestions, setSuggestions] = useState([]);
@@ -29,9 +31,7 @@ const Catalog = () => {
     const searchQuery = new URLSearchParams(location.search).get('search');
 
     useEffect(() => {
-        if (compareIds.length === 2) {
-            navigate('/compare');
-        }
+        if (compareIds.length === 2) navigate('/compare');
     }, [compareIds]);
 
     useEffect(() => {
@@ -48,13 +48,12 @@ const Catalog = () => {
     }, [categoryId]);
 
     const handleCheckboxChange = (key, value) => {
-        setSelectedFilters(prev => {
+        setSelectedFilters((prev) => {
             const values = prev[key] || [];
-            if (values.includes(value)) {
-                return { ...prev, [key]: values.filter(v => v !== value) };
-            } else {
-                return { ...prev, [key]: [...values, value] };
-            }
+            return {
+                ...prev,
+                [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
+            };
         });
     };
 
@@ -63,8 +62,9 @@ const Catalog = () => {
         try {
             const res = await axios.post('http://localhost:5000/api/products/filter', {
                 category_id: categoryId,
+                price_min: priceMin,
                 price_max: priceMax,
-                characteristics: selectedFilters
+                characteristics: selectedFilters,
             });
             setProducts(res.data);
         } catch (err) {
@@ -111,20 +111,20 @@ const Catalog = () => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleSearchSubmit} style={{ padding: '10px 30px', display: 'flex', gap: '10px', position: 'relative' }}>
+        <div style={{ fontFamily: 'Inter, sans-serif', minHeight: '100vh', color: '#fff' }}>
+            <form onSubmit={handleSearchSubmit} style={{ padding: '20px 30px', display: 'flex', gap: '10px', position: 'relative' }}>
                 <input
                     type="text"
                     placeholder="Поиск товаров..."
                     value={search}
                     onChange={handleSearchChange}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)}
-                    style={{ padding: '6px 10px', flex: 1 }}
+                    style={{ padding: '10px 14px', borderRadius: '8px', border: 'none', flex: 1 }}
                 />
                 {suggestions.length > 0 && (
-                    <ul style={{ position: 'absolute', backgroundColor: 'white', marginTop: '40px', listStyle: 'none', padding: '10px', border: '1px solid #ccc', zIndex: 999, width: '300px' }}>
+                    <ul style={{ position: 'absolute', backgroundColor: '#fff', marginTop: '48px', listStyle: 'none', padding: '10px', borderRadius: '10px', color: '#000', zIndex: 999, width: '300px' }}>
                         {suggestions.map((item) => (
-                            <li key={item.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/catalog?search=${encodeURIComponent(item.title)}`)}>
+                            <li key={item.id} style={{ cursor: 'pointer', padding: '5px 10px' }} onClick={() => navigate(`/catalog?search=${encodeURIComponent(item.title)}`)}>
                                 {item.title}
                             </li>
                         ))}
@@ -132,29 +132,39 @@ const Catalog = () => {
                 )}
             </form>
 
-            <div style={{ display: 'flex', padding: '20px' }}>
-                <form onSubmit={handleSubmit} style={{ width: '250px', marginRight: '30px' }}>
-                    <h3>Фильтры</h3>
-                    <label>Категория:</label><br />
-                    <select value={categoryId} onChange={e => setCategoryId(Number(e.target.value))}>
-                        {categoryOptions.map(cat => (
+            <div style={{ display: 'flex', padding: '20px 30px' }}>
+                <form onSubmit={handleSubmit} style={{ width: '260px', marginRight: '40px', background: '#320a80', padding: '20px', borderRadius: '20px' }}>
+                    <h3 style={{ marginTop: 0 }}>Фильтры</h3>
+
+                    <label>Цена от:</label>
+                    <input
+                        type="number"
+                        value={priceMin}
+                        min="0"
+                        max={priceMax}
+                        step="1"
+                        onChange={(e) => setPriceMin(Number(e.target.value))}
+                        style={{ width: '100%', padding: '6px', marginBottom: '10px', borderRadius: '6px' }}
+                    />
+
+                    <label>Цена до:</label>
+                    <input
+                        type="number"
+                        value={priceMax}
+                        min={priceMin}
+                        max="1000000"
+                        step="1"
+                        onChange={(e) => setPriceMax(Number(e.target.value))}
+                        style={{ width: '100%', padding: '6px', marginBottom: '15px', borderRadius: '6px' }}
+                    />
+
+                    <label>Категория:</label>
+                    <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} style={{ width: '100%', padding: '6px', borderRadius: '6px', marginBottom: '15px' }}>
+                        {categoryOptions.map((cat) => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
                     </select>
 
-                    <br /><br />
-                    <label>Максимальная цена: {priceMax} ₽</label><br />
-                    <input
-                        type="range"
-                        min="1000"
-                        max="200000"
-                        step="1000"
-                        value={priceMax}
-                        onChange={e => setPriceMax(Number(e.target.value))}
-                        style={{ width: '100%' }}
-                    />
-
-                    <br /><br />
                     {Object.entries(filters).map(([key, values]) => (
                         <div key={key} style={{ marginBottom: '10px' }}>
                             <strong>{key}:</strong><br />
@@ -170,7 +180,8 @@ const Catalog = () => {
                             ))}
                         </div>
                     ))}
-                    <button type="submit">Показать</button>
+
+                    <button type="submit" style={{ marginTop: '10px', width: '100%' }}>Показать</button>
                 </form>
 
                 <div style={{ flex: 1 }}>
@@ -179,18 +190,18 @@ const Catalog = () => {
                         <p>Нет товаров по фильтру.</p>
                     ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
-                            {products.map(product => (
-                                <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px' }}>
+                            {products.map((product) => (
+                                <div key={product.id} style={{ background: '#240058', borderRadius: '14px', padding: '15px', color: '#fff' }}>
                                     <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <img src={product.image_url} alt={product.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
-                                        <h4>{product.title}</h4>
+                                        <img src={product.image_url} alt={product.title} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
+                                        <h4 style={{ margin: '10px 0 5px' }}>{product.title}</h4>
                                         <p>{product.price} ₽</p>
                                         <p><small>{product.brand}</small></p>
                                     </Link>
-                                    <button onClick={() => toggleProduct(product.id)} style={{ marginTop: '10px', marginRight: '5px' }}>
+                                    <button onClick={() => toggleProduct(product.id)} style={{ marginTop: '10px', marginRight: '10px' }}>
                                         {compareIds.includes(product.id) ? 'Убрать из сравнения' : 'Сравнить'}
                                     </button>
-                                    <button onClick={() => toggleFavorite(product.id)}>
+                                    <button onClick={() => toggleFavorite(product.id)} style={{ backgroundColor: '#ff4081' }}>
                                         {favorites.includes(product.id) ? '💔 Удалить' : '💖 В избранное'}
                                     </button>
                                 </div>
