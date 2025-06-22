@@ -79,7 +79,7 @@ const ProfilePage = () => {
                             <img src={p.image_url} alt={p.title} style={styles.image} />
                             <h4>{p.title}</h4>
                             <p>{p.price} ₽</p>
-                            <button onClick={() => handleRemoveFavorite(p.id)} style={styles.deleteBtn}>
+                            <button onClick={() => handleRemoveFavorite(p.id)} >
                                 <FaTrashAlt style={{ marginRight: 5 }} /> Удалить
                             </button>
                         </div>

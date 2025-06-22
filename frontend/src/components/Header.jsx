@@ -24,44 +24,56 @@ const Navbar = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: '#2c3e50',
-            color: 'white',
-            padding: '15px 30px'
+            padding: '16px 32px',
+            background: 'rgba(28, 25, 58, 0.9)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            margin: '20px auto',
+            maxWidth: '1200px',
+            fontFamily: 'Inter, sans-serif',
+            color: '#fff',
+            boxShadow: '0 0 15px rgba(160, 132, 232, 0.2)'
         }}>
-            <div>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 {location.pathname !== '/' && (
-                    <Link to="/" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
-                        ← На главную
-                    </Link>
+                    <Link to="/" style={navLinkStyle}>← На главную</Link>
                 )}
-                <Link to="/favorites" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                <Link to="/favorites" style={navLinkStyle}>
                     Избранное ({favorites.length})
                 </Link>
-                <Link to="/compare" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                <Link to="/compare" style={navLinkStyle}>
                     Сравнение ({compareIds.length})
                 </Link>
-                <Link to="/profile" style={{ color: 'white', marginRight: '20px', textDecoration: 'none' }}>
+                <Link to="/profile" style={navLinkStyle}>
                     Профиль
                 </Link>
             </div>
 
-            <div>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 {user ? (
                     <span
                         onClick={handleLogout}
-                        style={{ cursor: 'pointer', color: 'white', textDecoration: 'underline' }}
+                        style={{ cursor: 'pointer', color: '#a084e8', textDecoration: 'underline' }}
                     >
-                        Выйти ({user.email})
-                    </span>
+            Выйти ({user.email})
+          </span>
                 ) : (
                     <>
-                        <Link to="/login" style={{ color: 'white', marginRight: '20px' }}>Вход</Link>
-                        <Link to="/register" style={{ color: 'white' }}>Регистрация</Link>
+                        <Link to="/login" style={navLinkStyle}>Вход</Link>
+                        <Link to="/register" style={navLinkStyle}>Регистрация</Link>
                     </>
                 )}
             </div>
         </nav>
     );
+};
+
+const navLinkStyle = {
+    color: '#a084e8',
+    fontWeight: 500,
+    textDecoration: 'none',
+    fontSize: '1rem',
+    transition: 'color 0.2s ease',
 };
 
 export default Navbar;

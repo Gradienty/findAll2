@@ -7,45 +7,57 @@ import { FaSignInAlt } from 'react-icons/fa';
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setMessage('');
+
         try {
             const res = await login(email, password);
             saveToken(res.data.token);
-            window.location.reload();
+            setMessage('Успешный вход! Перенаправление...');
+            setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
-            alert('Ошибка входа. Проверьте данные.');
+            setError(err.response?.data?.error || 'Ошибка входа. Проверьте данные.');
         }
     };
 
     return (
-        <main style={styles.page}>
+        <div style={styles.page}>
             <form onSubmit={handleSubmit} style={styles.form}>
                 <h2 style={styles.title}>
                     <FaSignInAlt style={{ marginRight: 10 }} />
                     Вход
                 </h2>
+
                 <input
                     type="email"
                     placeholder="Email"
                     value={email}
                     required
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     style={styles.input}
                 />
+
                 <input
                     type="password"
                     placeholder="Пароль"
                     value={password}
                     required
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
                     style={styles.input}
                 />
+
                 <button type="submit">Войти</button>
+
+                {message && <p style={styles.message}>{message}</p>}
+                {error && <p style={styles.error}>{error}</p>}
             </form>
-        </main>
+        </div>
     );
 };
 
@@ -81,6 +93,16 @@ const styles = {
         backgroundColor: '#2c254a',
         color: 'white',
         fontSize: '1rem'
+    },
+    message: {
+        color: 'lime',
+        marginTop: '15px',
+        textAlign: 'center'
+    },
+    error: {
+        color: 'tomato',
+        marginTop: '15px',
+        textAlign: 'center'
     }
 };
 

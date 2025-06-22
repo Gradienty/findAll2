@@ -13,27 +13,31 @@ const Navbar = () => {
     const { favorites } = useFavorites();
 
     const handleLogout = () => {
-        const confirmed = window.confirm('Вы действительно хотите выйти из аккаунта?');
-        if (confirmed) {
+        if (window.confirm('Вы действительно хотите выйти из аккаунта?')) {
             logout();
             window.location.reload();
         }
     };
 
     return (
-        <nav style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'rgba(15, 12, 41, 0.9)',
-            padding: '16px 30px',
-            borderRadius: '0 0 16px 16px',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-            marginBottom: '20px',
-            color: 'white',
-            fontFamily: 'Inter, sans-serif',
-            backdropFilter: 'blur(8px)'
-        }}>
+        <nav
+            style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'rgba(15, 12, 41, 0.9)',
+                padding: '16px 30px',
+                borderRadius: '0 0 16px 16px',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+                marginBottom: '20px',
+                color: '#fff',
+                fontFamily: 'Inter, sans-serif',
+                backdropFilter: 'blur(10px)',
+                position: 'sticky',
+                top: 0,
+                zIndex: 1000,
+            }}
+        >
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 {location.pathname !== '/' && (
                     <Link to="/" style={linkStyle}>
@@ -51,17 +55,14 @@ const Navbar = () => {
                 </Link>
             </div>
 
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 {user ? (
                     <>
                         <Link to="/profile" style={linkStyle}>
                             <FaUser style={iconStyle} /> Профиль
                         </Link>
-                        <span
-                            onClick={handleLogout}
-                            style={{ ...linkStyle, cursor: 'pointer' }}
-                        >
-                            <FaSignOutAlt style={iconStyle} /> Выйти ({user.email})
+                        <span onClick={handleLogout} style={{ ...linkStyle, cursor: 'pointer' }}>
+                            <FaSignOutAlt style={iconStyle} /> Выйти
                         </span>
                     </>
                 ) : (
@@ -82,11 +83,11 @@ const linkStyle = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
-    transition: 'color 0.3s ease'
+    transition: 'color 0.3s ease',
 };
 
 const iconStyle = {
-    verticalAlign: 'middle'
+    verticalAlign: 'middle',
 };
 
 export default Navbar;

@@ -11,7 +11,7 @@ const categoryOptions = [
     { id: 3, name: 'Планшеты' },
     { id: 4, name: 'Мониторы' },
     { id: 5, name: 'Наушники' },
-    { id: 6, name: 'Телевизоры' }
+    { id: 6, name: 'Телевизоры' },
 ];
 
 const Catalog = () => {
@@ -122,9 +122,20 @@ const Catalog = () => {
                     style={{ padding: '10px 14px', borderRadius: '8px', border: 'none', flex: 1 }}
                 />
                 {suggestions.length > 0 && (
-                    <ul style={{ position: 'absolute', backgroundColor: '#fff', marginTop: '48px', listStyle: 'none', padding: '10px', borderRadius: '10px', color: '#000', zIndex: 999, width: '300px' }}>
+                    <ul style={{
+                        position: 'absolute',
+                        backgroundColor: '#fff',
+                        color: '#000',
+                        borderRadius: '10px',
+                        marginTop: '48px',
+                        listStyle: 'none',
+                        padding: '10px',
+                        zIndex: 999,
+                        width: '300px'
+                    }}>
                         {suggestions.map((item) => (
-                            <li key={item.id} style={{ cursor: 'pointer', padding: '5px 10px' }} onClick={() => navigate(`/catalog?search=${encodeURIComponent(item.title)}`)}>
+                            <li key={item.id} style={{ cursor: 'pointer', padding: '5px 10px' }}
+                                onClick={() => navigate(`/catalog?search=${encodeURIComponent(item.title)}`)}>
                                 {item.title}
                             </li>
                         ))}
@@ -134,7 +145,7 @@ const Catalog = () => {
 
             <div style={{ display: 'flex', padding: '20px 30px' }}>
                 <form onSubmit={handleSubmit} style={{ width: '260px', marginRight: '40px', background: '#320a80', padding: '20px', borderRadius: '20px' }}>
-                    <h3 style={{ marginTop: 0 }}>Фильтры</h3>
+                    <h3>Фильтры</h3>
 
                     <label>Цена от:</label>
                     <input
@@ -159,7 +170,11 @@ const Catalog = () => {
                     />
 
                     <label>Категория:</label>
-                    <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} style={{ width: '100%', padding: '6px', borderRadius: '6px', marginBottom: '15px' }}>
+                    <select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(Number(e.target.value))}
+                        style={{ width: '100%', padding: '6px', borderRadius: '6px', marginBottom: '15px' }}
+                    >
                         {categoryOptions.map((cat) => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
@@ -181,7 +196,7 @@ const Catalog = () => {
                         </div>
                     ))}
 
-                    <button type="submit" style={{ marginTop: '10px', width: '100%' }}>Показать</button>
+                    <button type="submit" style={{ width: '100%', marginTop: '10px' }}>Показать</button>
                 </form>
 
                 <div style={{ flex: 1 }}>
@@ -193,7 +208,8 @@ const Catalog = () => {
                             {products.map((product) => (
                                 <div key={product.id} style={{ background: '#240058', borderRadius: '14px', padding: '15px', color: '#fff' }}>
                                     <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                        <img src={product.image_url} alt={product.title} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
+                                        <img src={product.image_url} alt={product.title}
+                                             style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px' }} />
                                         <h4 style={{ margin: '10px 0 5px' }}>{product.title}</h4>
                                         <p>{product.price} ₽</p>
                                         <p><small>{product.brand}</small></p>
@@ -201,7 +217,7 @@ const Catalog = () => {
                                     <button onClick={() => toggleProduct(product.id)} style={{ marginTop: '10px', marginRight: '10px' }}>
                                         {compareIds.includes(product.id) ? 'Убрать из сравнения' : 'Сравнить'}
                                     </button>
-                                    <button onClick={() => toggleFavorite(product.id)} style={{ backgroundColor: '#ff4081' }}>
+                                    <button onClick={() => toggleFavorite(product.id)} style={{ backgroundColor: '#ff4081', marginTop: '10px' }}>
                                         {favorites.includes(product.id) ? '💔 Удалить' : '💖 В избранное'}
                                     </button>
                                 </div>

@@ -28,7 +28,7 @@ const RegisterPage = () => {
         <main style={styles.page}>
             <form onSubmit={handleRegister} style={styles.form}>
                 <h2 style={styles.title}>
-                    <FaUserPlus style={{ marginRight: 10 }} />
+                    <FaUserPlus style={{ marginRight: 10, color: '#fff' }} />
                     Регистрация
                 </h2>
 

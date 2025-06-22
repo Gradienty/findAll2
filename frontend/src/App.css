@@ -1,15 +1,10 @@
 body {
-  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
-  min-height: 100vh;
   margin: 0;
-  padding: 0;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
   color: #fff;
-  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
 }
-
 
 main {
   max-width: 1200px;
@@ -27,18 +22,24 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Общая стилизация для всех кнопок */
 button {
-  border-radius: 10px;
+  background: #6a00f4;
+  color: #fff;
   border: none;
-  padding: 10px 20px;
+  border-radius: 10px;
+  padding: 12px 20px;
   font-size: 1rem;
   font-weight: 500;
-  background-color: #6a00f4;
-  color: white;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 button:hover {
-  background-color: #a084e8;
-  color: white;
+  background: #a084e8;
 }
+
+button:active {
+  transform: scale(0.98);
+}
+

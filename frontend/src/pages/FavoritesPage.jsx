@@ -40,9 +40,7 @@ const FavoritesPage = () => {
                                 <p>{product.price} ₽</p>
                             </Link>
                             <button onClick={() => toggleFavorite(product.id)} style={{
-                                background: '#ff4081', color: 'white',
-                                border: 'none', padding: '10px', marginTop: '10px',
-                                borderRadius: '10px', cursor: 'pointer'
+
                             }}>
                                 <FaHeartBroken /> Удалить
                             </button>

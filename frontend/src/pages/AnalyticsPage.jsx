@@ -7,7 +7,7 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
+    ResponsiveContainer
 } from 'recharts';
 import { FaChartBar } from 'react-icons/fa';
 
@@ -33,34 +33,47 @@ const AnalyticsPage = () => {
     }, []);
 
     return (
-        <div style={{ minHeight: '100vh', width: '100%', padding: '30px', background: 'linear-gradient(to right, #0f0c29, #302b63, #24243e)', color: '#fff', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}>
-            <div
-                style={{
-
-                    padding: '20px',
-                    borderRadius: '20px',
-                    marginBottom: '30px',
-                    boxShadow: '0 0 15px rgba(160, 132, 232, 0.5)',
-                    textAlign: 'center'
-                }}
-            >
-                <h2 style={{ margin: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FaChartBar style={{ marginRight: '10px' }} />Популярные товары по просмотрам
+        <div style={{
+            minHeight: '100vh',
+            padding: '40px 30px',
+            color: '#fff',
+            fontFamily: 'Inter, sans-serif'
+        }}>
+            <div style={{
+                background: '#1e1b2e',
+                borderRadius: '20px',
+                padding: '30px',
+                marginBottom: '30px',
+                boxShadow: '0 0 25px rgba(160, 132, 232, 0.25)',
+                textAlign: 'center'
+            }}>
+                <h2 style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    fontSize: '1.8rem',
+                    color: '#a084e8'
+                }}>
+                    <FaChartBar style={{ marginRight: '10px' }} /> Аналитика просмотров
                 </h2>
+                <p style={{ color: '#ccc', marginTop: '10px' }}>
+                    Топ самых просматриваемых товаров за всё время.
+                </p>
             </div>
-            <p style={{ color: '#ccc', marginBottom: '20px', textAlign: 'center' }}>
-                Здесь представлены самые просматриваемые товары за всё время. Это может помочь определить, что вызывает наибольший интерес у пользователей.
-            </p>
 
             {loading ? (
-                <p style={{ color: '#aaa', textAlign: 'center' }}>Загрузка...</p>
+                <p style={{ textAlign: 'center', color: '#aaa' }}>Загрузка...</p>
             ) : error ? (
-                <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>
+                <p style={{ textAlign: 'center', color: 'tomato' }}>{error}</p>
             ) : data.length === 0 ? (
-                <p style={{ color: '#aaa', textAlign: 'center' }}>Нет данных для отображения</p>
+                <p style={{ textAlign: 'center', color: '#aaa' }}>Нет данных для отображения.</p>
             ) : (
-                <div style={{ height: '70vh' }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                <div style={{
+                    background: '#1c1b3a',
+                    padding: '20px',
+                    borderRadius: '16px',
+                    boxShadow: '0 0 15px rgba(160,132,232,0.2)'
+                }}>
+                    <ResponsiveContainer width="100%" height={600}>
                         <BarChart
                             data={data}
                             layout="vertical"
@@ -70,10 +83,14 @@ const AnalyticsPage = () => {
                             <XAxis type="number" allowDecimals={false} stroke="#ccc" />
                             <YAxis dataKey="title" type="category" width={200} stroke="#ccc" />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#222', borderColor: '#888' }}
+                                contentStyle={{
+                                    backgroundColor: '#2e2b4f',
+                                    border: '1px solid #888',
+                                    color: '#fff'
+                                }}
                                 formatter={(value) => [`${value} просмотров`, 'Просмотры']}
                             />
-                            <Bar dataKey="views" fill="#a084e8" name="Просмотры" radius={[0, 10, 10, 0]} />
+                            <Bar dataKey="views" fill="#a084e8" radius={[0, 10, 10, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
